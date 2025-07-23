@@ -1,0 +1,16 @@
+{
+  "regions": [
+    {
+      "id": "amazonia_central",
+      "name": "Amazonia Central",
+      "bbox": [-65.0, -8.0, -58.0, -2.0],
+      "active": true
+    },
+    {
+      "id": "pantanal",
+      "name": "Pantanal",
+      "bbox": [-58.0, -20.0, -55.0, -16.0],
+      "active": true
+    }
+  ]
+}

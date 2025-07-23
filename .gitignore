@@ -1,0 +1,28 @@
+# CREDENCIAIS (NUNCA SUBIR!)
+.env
+.env.txt
+*.env
+config/credentials.json
+
+# Dados grandes
+data/raw/*.nc
+data/processed/*.csv
+*.h5
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.pytest_cache/
+
+# Logs
+logs/*.log
+*.log
+
+# Temporários
+temp/
+*.tmp
+
+# Sistema
+.DS_Store
+Thumbs.db

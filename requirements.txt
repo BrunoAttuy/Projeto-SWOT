@@ -1,0 +1,7 @@
+earthaccess 
+xarray 
+netCDF4 
+pandas 
+geopandas 
+psycopg2-binary 
+python-dotenv 
