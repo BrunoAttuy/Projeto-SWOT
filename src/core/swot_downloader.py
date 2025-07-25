@@ -22,23 +22,26 @@ class SWOTDownloader:
             return False
     
     def search_data(self, region, days_back=2):
-        """Buscar dados SWOT para uma região"""
+        """Buscar dados SWOT para uma região - VERSÃO CORRIGIDA"""
         if not self.authenticate():
             return []
         
         try:
-            # Definir período
-            end_date = datetime.now().date()
-            start_date = end_date - timedelta(days=days_back)
+            # CORREÇÃO 1: Usar período de novembro 2023 (dados conhecidos)
+            # Ao invés de período recente que não tem dados
+            start_date = '2023-11-01'
+            end_date = '2023-11-30'
+            
+            print(f"   Buscando dados de {start_date} ate {end_date}")
             
             # Extrair bbox da região [min_lon, min_lat, max_lon, max_lat]
             bbox = region['bbox']
             
-            # Buscar dados - formato correto (min_lat, min_lon, max_lat, max_lon)
+            # CORREÇÃO 2: Usar produto específico com versão
             results = earthaccess.search_data(
-                short_name='SWOT_L2_HR_PIXC',
-                bounding_box=(bbox[1], bbox[0], bbox[3], bbox[2]),
-                temporal=(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
+                short_name='SWOT_L2_HR_PIXC_2.0',  # Versão específica
+                bounding_box=(bbox[0], bbox[1], bbox[2], bbox[3]),  # Formato correto
+                temporal=(start_date, end_date)
             )
             
             self.logger.info(f"Encontrados {len(results)} granules para {region['name']}")

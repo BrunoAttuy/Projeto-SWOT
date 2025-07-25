@@ -1,16 +1,228 @@
 {
   "regions": [
     {
-      "id": "amazonia_central",
-      "name": "Amazonia Central",
-      "bbox": [-65.0, -8.0, -58.0, -2.0],
-      "active": true
+      "id": "arroio_guacu",
+      "name": "Arroio Guaçu",
+      "bbox": [-54.7, -25.8, -54.5, -25.6],
+      "active": true,
+      "priority": "high",
+      "description": "Região do Arroio Guaçu - RS/PR"
     },
     {
-      "id": "pantanal",
-      "name": "Pantanal",
-      "bbox": [-58.0, -20.0, -55.0, -16.0],
-      "active": true
+      "id": "balsa_cantu",
+      "name": "Balsa do Cantu",
+      "bbox": [-54.3, -25.4, -54.1, -25.2],
+      "active": true,
+      "priority": "medium",
+      "description": "Balsa do Cantu - Rio Paraná"
+    },
+    {
+      "id": "balsa_santa_maria",
+      "name": "Balsa Santa Maria",
+      "bbox": [-53.9, -24.8, -53.7, -24.6],
+      "active": true,
+      "priority": "medium",
+      "description": "Balsa Santa Maria - Rio Paraná"
+    },
+    {
+      "id": "barbosa_ferraz",
+      "name": "Barbosa Ferraz",
+      "bbox": [-52.4, -24.1, -52.2, -23.9],
+      "active": true,
+      "priority": "medium",
+      "description": "Barbosa Ferraz - PR"
+    },
+    {
+      "id": "brilhante",
+      "name": "Brilhante",
+      "bbox": [-54.7, -22.4, -54.5, -22.2],
+      "active": true,
+      "priority": "medium",
+      "description": "Brilhante - MS"
+    },
+    {
+      "id": "canal_piracema",
+      "name": "Canal da Piracema",
+      "bbox": [-54.7, -25.5, -54.5, -25.3],
+      "active": true,
+      "priority": "high",
+      "description": "Canal da Piracema - Itaipu"
+    },
+    {
+      "id": "carapa",
+      "name": "Carapá",
+      "bbox": [-55.8, -22.7, -55.6, -22.5],
+      "active": true,
+      "priority": "medium",
+      "description": "Carapá - MS"
+    },
+    {
+      "id": "carlos_antonio_lopez",
+      "name": "Carlos Antonio Lopez",
+      "bbox": [-56.1, -25.5, -55.9, -25.3],
+      "active": true,
+      "priority": "medium",
+      "description": "Carlos Antonio Lopez - Paraguai"
+    },
+    {
+      "id": "confluencia_pr_ig",
+      "name": "Confluência PR-IG",
+      "bbox": [-54.6, -25.5, -54.4, -25.3],
+      "active": true,
+      "priority": "high",
+      "description": "Confluência Paraná-Iguaçu"
+    },
+    {
+      "id": "corpus_christi",
+      "name": "Corpus Christi",
+      "bbox": [-55.9, -27.5, -55.7, -27.3],
+      "active": true,
+      "priority": "medium",
+      "description": "Corpus Christi - Paraguai"
+    },
+    {
+      "id": "embalse",
+      "name": "Embalse",
+      "bbox": [-55.7, -26.8, -55.5, -26.6],
+      "active": true,
+      "priority": "medium",
+      "description": "Embalse - Paraguai"
+    },
+    {
+      "id": "estrada_iguatemi",
+      "name": "Estrada do Iguatemi",
+      "bbox": [-54.2, -23.9, -54.0, -23.7],
+      "active": true,
+      "priority": "medium",
+      "description": "Estrada do Iguatemi - MS"
+    },
+    {
+      "id": "florida",
+      "name": "Florida",
+      "bbox": [-56.3, -26.4, -56.1, -26.2],
+      "active": true,
+      "priority": "medium",
+      "description": "Florida - Paraguai"
+    },
+    {
+      "id": "fortuna",
+      "name": "Fortuna",
+      "bbox": [-55.2, -25.8, -55.0, -25.6],
+      "active": true,
+      "priority": "medium",
+      "description": "Fortuna - Paraguai/Brasil"
+    },
+    {
+      "id": "foz_ivai",
+      "name": "Foz do Ivaí",
+      "bbox": [-53.4, -22.8, -53.2, -22.6],
+      "active": true,
+      "priority": "high",
+      "description": "Foz do Rio Ivaí - PR"
+    },
+    {
+      "id": "foz_ivinhema",
+      "name": "Foz do Ivinhema",
+      "bbox": [-53.8, -22.9, -53.6, -22.7],
+      "active": true,
+      "priority": "high",
+      "description": "Foz do Rio Ivinhema - MS"
+    },
+    {
+      "id": "guaira_braco_direito",
+      "name": "Guaira Braço Direito",
+      "bbox": [-54.3, -24.1, -54.1, -23.9],
+      "active": true,
+      "priority": "high",
+      "description": "Guaíra Braço Direito - Rio Paraná"
+    },
+    {
+      "id": "guaira_braco_esquerdo",
+      "name": "Guaira Braço Esquerdo",
+      "bbox": [-54.4, -24.1, -54.2, -23.9],
+      "active": true,
+      "priority": "high",
+      "description": "Guaíra Braço Esquerdo - Rio Paraná"
+    },
+    {
+      "id": "guaira_porto",
+      "name": "Guaira Porto",
+      "bbox": [-54.3, -24.1, -54.1, -23.9],
+      "active": true,
+      "priority": "high",
+      "description": "Porto de Guaíra - PR"
+    },
+    {
+      "id": "hotel_cataratas",
+      "name": "Hotel Cataratas",
+      "bbox": [-54.5, -25.7, -54.3, -25.5],
+      "active": true,
+      "priority": "medium",
+      "description": "Hotel das Cataratas - Foz do Iguaçu"
+    },
+    {
+      "id": "iate_clube_cataratas",
+      "name": "Iate Clube Cataratas",
+      "bbox": [-54.6, -25.5, -54.4, -25.3],
+      "active": true,
+      "priority": "medium",
+      "description": "Iate Clube Cataratas - Foz do Iguaçu"
+    },
+    {
+      "id": "itabo",
+      "name": "Itabó",
+      "bbox": [-55.1, -27.2, -54.9, -27.0],
+      "active": true,
+      "priority": "medium",
+      "description": "Itabó - Paraguai"
+    },
+    {
+      "id": "itakyry",
+      "name": "Itakyry",
+      "bbox": [-55.4, -25.3, -55.2, -25.1],
+      "active": true,
+      "priority": "medium",
+      "description": "Itakyry - Paraguai"
+    },
+    {
+      "id": "ivinhema",
+      "name": "Ivinhema",
+      "bbox": [-53.8, -22.3, -53.6, -22.1],
+      "active": true,
+      "priority": "medium",
+      "description": "Ivinhema - MS"
+    },
+    {
+      "id": "jelp",
+      "name": "Jelp",
+      "bbox": [-54.8, -25.2, -54.6, -25.0],
+      "active": true,
+      "priority": "medium",
+      "description": "Jelp - Região Paraná"
+    },
+    {
+      "id": "juan_manoel_frutos",
+      "name": "Juan Manoel Frutos",
+      "bbox": [-56.2, -26.1, -56.0, -25.9],
+      "active": true,
+      "priority": "medium",
+      "description": "Juan Manoel Frutos - Paraguai"
+    },
+    {
+      "id": "jusante_barragem",
+      "name": "Jusante Barragem",
+      "bbox": [-54.6, -25.4, -54.4, -25.2],
+      "active": true,
+      "priority": "high",
+      "description": "Jusante da Barragem de Itaipu"
+    },
+    {
+      "id": "jusante_ensecadeira",
+      "name": "Jusante Ensecadeira",
+      "bbox": [-54.6, -25.5, -54.4, -25.3],
+      "active": true,
+      "priority": "high",
+      "description": "Jusante da Ensecadeira - Itaipu"
     }
   ]
 }

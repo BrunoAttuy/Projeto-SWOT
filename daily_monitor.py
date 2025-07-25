@@ -45,31 +45,50 @@ def extract_granule_name(granule):
         return f"unknown_granule_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
 def process_netcdf_file(file_path, region):
-    """Processar arquivo NetCDF"""
+    """Processar arquivo NetCDF - VERSÃO CORRIGIDA"""
     try:
-        with xr.open_dataset(file_path) as ds:
-            # Extrair dados básicos
-            if 'latitude' not in ds.variables or 'longitude' not in ds.variables:
+        print(f"   Processando arquivo: {file_path}")
+        
+        # Usar mesmo método do código de exemplo
+        with xr.open_dataset(file_path, group='pixel_cloud', engine='h5netcdf') as ds:
+            
+            # Verificar variáveis disponíveis
+            print(f"   Variaveis disponiveis: {list(ds.variables.keys())}")
+            
+            required_vars = ['latitude', 'longitude']
+            if not all(var in ds.variables for var in required_vars):
+                print(f"   AVISO: Variaveis obrigatorias nao encontradas")
                 return None
             
-            # Criar DataFrame
+            # Criar DataFrame como no código de exemplo
             data = {
-                'latitude': ds['latitude'].values.flatten(),
-                'longitude': ds['longitude'].values.flatten()
+                'latitude': ds.latitude.values.astype('float32'),
+                'longitude': ds.longitude.values.astype('float32'),
             }
             
             # Adicionar outras variáveis se existirem
-            optional_vars = ['height', 'classification', 'coherent_power']
-            for var in optional_vars:
-                if var in ds.variables:
-                    data[var] = ds[var].values.flatten()
+            optional_vars = {
+                'height': 'height',
+                'classification': 'classification', 
+                'coherent_power': 'coherent_power'
+            }
+            
+            for var_name, ds_var in optional_vars.items():
+                if ds_var in ds.variables:
+                    if var_name == 'classification':
+                        data[var_name] = ds[ds_var].values.astype('uint8')
+                    else:
+                        data[var_name] = ds[ds_var].values.astype('float32')
+                    print(f"   Extraida variavel: {var_name}")
             
             df = pd.DataFrame(data)
+            print(f"   DataFrame criado com {len(df)} pixels")
             
             # Remover valores inválidos
             df = df.dropna(subset=['latitude', 'longitude'])
+            print(f"   Apos limpeza: {len(df)} pixels validos")
             
-            # Filtrar por região
+            # Filtrar por região se especificado
             if region and 'bbox' in region:
                 bbox = region['bbox']
                 mask = (
@@ -77,6 +96,7 @@ def process_netcdf_file(file_path, region):
                     (df['latitude'] >= bbox[1]) & (df['latitude'] <= bbox[3])
                 )
                 df = df[mask]
+                print(f"   Apos filtro regional: {len(df)} pixels")
             
             return df
             
@@ -97,6 +117,7 @@ def insert_granule_data(df, granule_name, region, db_connection):
         """, (granule_name, region.get('id'), len(df), datetime.now()))
         
         granule_id = cursor.fetchone()[0]
+        print(f"   Granule inserido com ID: {granule_id}")
         
         # Inserir pixels em lotes
         batch_size = 1000
@@ -119,6 +140,8 @@ def insert_granule_data(df, granule_name, region, db_connection):
                 INSERT INTO pixel_data (granule_id, latitude, longitude, height_m, classification_id, coherent_power, created_at)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, insert_data)
+            
+            print(f"   Inserido lote {i//batch_size + 1}: {len(batch)} pixels")
         
         db_connection.commit()
         cursor.close()
@@ -149,6 +172,8 @@ def main():
             password=os.getenv('DB_PASSWORD')
         )
         
+        print("Conectado ao banco de dados")
+        
         # Inicializar downloader
         downloader = SWOTDownloader()
         
@@ -169,6 +194,8 @@ def main():
                 print(f"   INFO: Nenhum dado encontrado")
                 continue
             
+            print(f"   ENCONTRADOS: {len(results)} granules")
+            
             # Verificar quais são novos
             new_granules = []
             for granule in results:
@@ -183,16 +210,19 @@ def main():
             print(f"   NOVOS: {len(new_granules)} novos granules encontrados")
             
             # Processar granules novos
-            for granule in new_granules[:3]:  # Limitar a 3 por região
+            for granule in new_granules[:5]:  # Limitar a 2 por região para teste
                 try:
                     granule_name = extract_granule_name(granule)
                     print(f"   PROCESSANDO: {granule_name}")
                     
                     # Download temporário
                     with tempfile.TemporaryDirectory() as temp_dir:
+                        print(f"   Baixando para: {temp_dir}")
                         files = downloader.download_data([granule], temp_dir)
                         
                         if files:
+                            print(f"   Arquivo baixado: {files[0]}")
+                            
                             # Processar arquivo
                             df = process_netcdf_file(files[0], region)
                             
@@ -222,6 +252,8 @@ def main():
         
     except Exception as e:
         print(f"ERRO: Erro no monitor: {e}")
+        import traceback
+        traceback.print_exc()
         return 1
     
     return 0
