@@ -45,7 +45,6 @@ def extract_granule_name(granule):
         return f"unknown_granule_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
 def process_netcdf_file(file_path, region):
-    """Processar arquivo NetCDF - VERSÃO CORRIGIDA"""
     try:
         print(f"   Processando arquivo: {file_path}")
         

@@ -3,7 +3,6 @@ from pathlib import Path
 from datetime import datetime
 
 def setup_logger():
-    """Configurar sistema de logging sem emojis"""
     # Criar pasta logs se não existir
     log_dir = Path('logs')
     log_dir.mkdir(exist_ok=True)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Monitor diário para dados SWOT - VERSÃO CORRIGIDA
-Baseado no código funcionando fornecido pelo usuário
+Usando período November 2023 que sabemos que tem dados
 """
 import sys
 import os
@@ -147,7 +147,7 @@ def process_netcdf_file_corrected(file_path, region):
         return None
 
 def insert_granule_data(df, granule_name, region, db_connection):
-    """Inserir dados no banco - SEM ALTERAÇÕES"""
+    """Inserir dados no banco"""
     try:
         cursor = db_connection.cursor()
         
@@ -199,7 +199,7 @@ def main():
     
     # Setup
     logger = setup_logger()
-    print(f"MONITOR SWOT CORRIGIDO iniciado - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"MONITOR SWOT - NOVEMBER 2023 iniciado - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
     try:
         # Conectar ao banco
@@ -220,9 +220,9 @@ def main():
         regions = get_regions()
         print(f"MONITORANDO {len(regions)} regiões")
         
-        # Definir período de busca - ÚLTIMOS 2 DIAS
-        end_date = datetime.now().date()
-        start_date = end_date - timedelta(days=60)  # Últimos 2 dias
+        # USAR PERÍODO QUE SABEMOS QUE TEM DADOS (NOV 2023)
+        start_date = datetime(2023, 11, 1).date()
+        end_date = datetime(2023, 11, 30).date()
         
         print(f"PERÍODO: {start_date} até {end_date}")
         
@@ -255,7 +255,7 @@ def main():
             print(f"   NOVOS: {len(new_granules)} novos granules encontrados")
             
             # Processar granules novos (limitando para teste)
-            for granule in new_granules[:2]:  # Limitar a 2 por região
+            for granule in new_granules[:1]:  # Limitar a 1 por região para teste
                 try:
                     granule_name = extract_granule_name(granule)
                     print(f"   PROCESSANDO: {granule_name}")

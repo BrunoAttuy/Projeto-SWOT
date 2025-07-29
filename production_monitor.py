@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Monitor SWOT - Versão de Produção
+Monitor SWOT - Versão de Produção CORRIGIDA
 Configurado para suas regiões específicas
 """
 import sys
@@ -17,9 +17,9 @@ import xarray as xr
 import pandas as pd
 
 # CONFIGURAÇÕES DE PRODUÇÃO
-MAX_GRANULES_PER_REGION = 2  # Máximo por região
+MAX_GRANULES_PER_REGION = 5  # Máximo por região
 MAX_EXECUTION_TIME_MINUTES = 45  # Timeout
-MAX_PIXELS_PER_GRANULE = 200000  # Pular granules muito grandes
+MAX_PIXELS_PER_GRANULE = 500000  # Pular granules muito grandes
 
 def process_region_optimized(region, downloader, db_conn):
     """Processar região de forma otimizada"""
@@ -30,10 +30,10 @@ def process_region_optimized(region, downloader, db_conn):
     results = downloader.search_data(region)
     
     if not results:
-        print(f"    Nenhum dado encontrado")
+        print(f"     Nenhum dado encontrado")
         return 0
     
-    print(f"    Encontrados: {len(results)} granules")
+    print(f"     Encontrados: {len(results)} granules")
     
     # Verificar granules novos
     new_granules = []
@@ -43,10 +43,10 @@ def process_region_optimized(region, downloader, db_conn):
             new_granules.append(granule)
     
     if not new_granules:
-        print(f"    Todos os granules já processados")
+        print(f"     Todos os granules já processados")
         return 0
     
-    print(f"    Novos: {len(new_granules)} granules")
+    print(f"     Novos: {len(new_granules)} granules")
     
     processed = 0
     
@@ -54,68 +54,162 @@ def process_region_optimized(region, downloader, db_conn):
     for granule in new_granules:
         try:
             granule_name = extract_granule_name(granule)
-            print(f"    {granule_name[:30]}...")
+            print(f"     {granule_name[:30]}...")
             
             # Download e processamento
             with tempfile.TemporaryDirectory() as temp_dir:
                 files = downloader.download_data([granule], temp_dir)
                 
                 if files:
-                    df = process_netcdf_quick(files[0], region)
+                    df = process_netcdf_fixed(files[0], region)
                     
                     if df is not None and len(df) > 0:
                         # Pular se muito grande
                         if len(df) > MAX_PIXELS_PER_GRANULE:
-                            print(f"    Pulando (muito grande: {len(df)} pixels)")
+                            print(f"     Pulando (muito grande: {len(df)} pixels)")
                             continue
                         
                         # Inserir no banco
                         if insert_granule_data_optimized(df, granule_name, region, db_conn):
-                            print(f"    {len(df)} pixels inseridos")
+                            print(f"     {len(df)} pixels inseridos")
                             processed += 1
                         else:
-                            print(f"    Erro na inserção")
+                            print(f"     Erro na inserção")
                     else:
-                        print(f"    Nenhum pixel válido")
+                        print(f"     Nenhum pixel válido")
                         
         except Exception as e:
-            print(f"    Erro: {str(e)[:50]}...")
+            print(f"     Erro: {str(e)[:50]}...")
             continue
     
     return processed
 
-def process_netcdf_quick(file_path, region):
-    """Processamento rápido de NetCDF"""
+def process_netcdf_fixed(file_path, region):
+    """
+    Processamento de NetCDF
+    """
     try:
-        with xr.open_dataset(file_path, group='pixel_cloud', engine='h5netcdf') as ds:
-            # Extrair apenas coordenadas e classificação
-            data = {
-                'latitude': ds.latitude.values.astype('float32'),
-                'longitude': ds.longitude.values.astype('float32'),
+        print(f"     Processando arquivo: {file_path}")
+        
+        # CORREÇÃO: Tentar diferentes engines em ordem de preferência
+        engines_to_try = ['h5netcdf', 'netcdf4', 'scipy']
+        
+        ds = None
+        used_engine = None
+        
+        for engine in engines_to_try:
+            try:
+                ds = xr.open_dataset(file_path, group='pixel_cloud', engine=engine)
+                used_engine = engine
+                print(f"     Usando engine: {engine}")
+                break
+            except Exception as e:
+                print(f"     Engine {engine} falhou: {str(e)[:30]}...")
+                continue
+        
+        if ds is None:
+            # Tentar sem especificar engine
+            try:
+                ds = xr.open_dataset(file_path, group='pixel_cloud')
+                used_engine = 'default'
+                print(f"     Usando engine padrão")
+            except Exception as e:
+                print(f"     Todos os engines falharam: {e}")
+                return None
+        
+        # Processar dados usando context manager
+        with ds:
+            # Verificar variáveis disponíveis
+            available_vars = list(ds.variables.keys())
+            print(f"     Variáveis: {len(available_vars)} encontradas")
+            
+            required_vars = ['latitude', 'longitude']
+            if not all(var in ds.variables for var in required_vars):
+                print(f"     Variáveis obrigatórias não encontradas")
+                return None
+            
+            # Extrair dados de forma robusta
+            data = {}
+            
+            # Coordenadas (obrigatórias)
+            try:
+                # Achatar arrays multidimensionais
+                data['latitude'] = ds.latitude.values.flatten().astype('float32')
+                data['longitude'] = ds.longitude.values.flatten().astype('float32')
+                print(f"     Coordenadas extraídas: {len(data['latitude'])} pontos")
+            except Exception as e:
+                print(f"     Erro extraindo coordenadas: {e}")
+                return None
+            
+            # Variáveis opcionais com tratamento individual
+            optional_vars = {
+                'height': 'height',
+                'classification': 'classification', 
+                'coherent_power': 'coherent_power'
             }
             
-            # Adicionar height e classification se existir
-            if 'height' in ds.variables:
-                data['height'] = ds.height.values.astype('float32')
-            if 'classification' in ds.variables:
-                data['classification'] = ds.classification.values.astype('uint8')
+            for var_name, ds_var in optional_vars.items():
+                try:
+                    if ds_var in ds.variables:
+                        var_data = ds[ds_var].values.flatten()
+                        
+                        # Conversão de tipo específica
+                        if var_name == 'classification':
+                            data[var_name] = var_data.astype('uint8')
+                        else:
+                            data[var_name] = var_data.astype('float32')
+                        
+                        print(f"     Extraída variável: {var_name}")
+                except Exception as e:
+                    print(f"     Falha extraindo {var_name}: {str(e)[:30]}...")
+                    continue
             
-            df = pd.DataFrame(data)
+            # Criar DataFrame
+            try:
+                df = pd.DataFrame(data)
+                print(f"     DataFrame criado com {len(df)} pixels")
+            except Exception as e:
+                print(f"     Erro criando DataFrame: {e}")
+                return None
+            
+            # Limpeza robusta
+            original_size = len(df)
+            
+            # Filtrar coordenadas válidas
             df = df.dropna(subset=['latitude', 'longitude'])
             
-            # Filtro regional
+            # Filtrar coordenadas dentro de limites razoáveis
+            df = df[
+                (df['latitude'] >= -90) & (df['latitude'] <= 90) &
+                (df['longitude'] >= -180) & (df['longitude'] <= 180)
+            ]
+            
+            cleaned_count = original_size - len(df)
+            if cleaned_count > 0:
+                print(f"     Limpeza: removidos {cleaned_count} pixels inválidos")
+            
+            # Filtro regional com buffer
             if region and 'bbox' in region:
-                bbox = region['bbox']
+                bbox = region['bbox']  # [min_lon, min_lat, max_lon, max_lat]
+                
+                # Buffer pequeno para compensar imprecisões
+                buffer = 0.05  # ~1km
                 mask = (
-                    (df['longitude'] >= bbox[0]) & (df['longitude'] <= bbox[2]) &
-                    (df['latitude'] >= bbox[1]) & (df['latitude'] <= bbox[3])
+                    (df['longitude'] >= (bbox[0] - buffer)) & 
+                    (df['longitude'] <= (bbox[2] + buffer)) &
+                    (df['latitude'] >= (bbox[1] - buffer)) & 
+                    (df['latitude'] <= (bbox[3] + buffer))
                 )
+                
                 df = df[mask]
+                print(f"     Filtro regional: {len(df)} pixels na região")
             
             return df
             
     except Exception as e:
-        print(f"    Erro NetCDF: {e}")
+        print(f"     ERRO GERAL: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 def insert_granule_data_optimized(df, granule_name, region, db_connection):
@@ -158,7 +252,7 @@ def insert_granule_data_optimized(df, granule_name, region, db_connection):
         return True
         
     except Exception as e:
-        print(f"    Erro inserção: {e}")
+        print(f"     Erro inserção: {e}")
         db_connection.rollback()
         return False
 
@@ -193,8 +287,8 @@ def main():
     start_time = datetime.now()
     logger = setup_logger()
     
-    print(f" MONITOR SWOT PRODUÇÃO - {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f" Timeout configurado: {MAX_EXECUTION_TIME_MINUTES} minutos")
+    print(f" MONITOR SWOT PRODUÇÃO- {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Timeout configurado: {MAX_EXECUTION_TIME_MINUTES} minutos")
     
     try:
         # Conectar ao banco
@@ -208,6 +302,8 @@ def main():
             user=os.getenv('DB_USER'),
             password=os.getenv('DB_PASSWORD')
         )
+        
+        print(" Conectado ao banco de dados")
         
         # Inicializar downloader
         downloader = SWOTDownloader()
@@ -225,7 +321,7 @@ def main():
             # Verificar timeout
             elapsed = datetime.now() - start_time
             if elapsed.total_seconds() > (MAX_EXECUTION_TIME_MINUTES * 60):
-                print(f"⏱️ Timeout atingido ({MAX_EXECUTION_TIME_MINUTES}min)")
+                print(f"Timeout atingido ({MAX_EXECUTION_TIME_MINUTES}min)")
                 break
             
             try:
@@ -240,9 +336,9 @@ def main():
         execution_time = datetime.now() - start_time
         
         print(f"\n EXECUÇÃO CONCLUÍDA:")
-        print(f"    {total_processed} granules processados")
+        print(f"     {total_processed} granules processados")
         print(f"    Tempo de execução: {execution_time}")
-        print(f"    {len(active_regions)} regiões verificadas")
+        print(f"     {len(active_regions)} regiões verificadas")
         
         db_conn.close()
         
@@ -253,6 +349,8 @@ def main():
         return 1
 
 if __name__ == "__main__":
+    
+    
     exit_code = main()
-    print(f"\nFINALIZADO: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"\n FINALIZADO: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     sys.exit(exit_code)
